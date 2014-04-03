@@ -205,6 +205,7 @@ void Beam::autopilotToggle()
 
 			Entity *ent = tsm->createEntity(entName, "sphere.mesh");
 			ent->setMaterialName("tracks/transgreen");
+			ent->setQueryFlags(0x00000000);
 			node->attachObject(ent);		
 
 			landmarks.push_back(pair<Ogre::SceneNode*,Ogre::Entity*>(node,ent));
@@ -214,13 +215,15 @@ void Beam::autopilotToggle()
 
 		//==drawing rays========
 		rays = std::vector< ManualObject* >();
-		int k = 1;
+		int k = 10;
 		for(int i = 0 ; i < k ; i+=2)
 		{
-
+			
 			char manObjectName[20]="";
 			sprintf(manObjectName, "ray%d", i);//wheels[1]
 			ManualObject* manual = tsm->createManualObject(manObjectName);
+			
+			manual->setQueryFlags(0x00000000);
 			manual->setDynamic(true);
 			manual->begin("BaseWhiteNoLighting", RenderOperation::OT_LINE_LIST); 
 			manual->position(0,0,0);
@@ -231,6 +234,7 @@ void Beam::autopilotToggle()
 
 			sprintf(manObjectName, "ray%d", i+1);//wheels[0]
 			manual = tsm->createManualObject(manObjectName); 
+			manual->setQueryFlags(0x00000000);
 			manual->setDynamic(true);
 			manual->begin("BaseWhiteNoLighting", RenderOperation::OT_LINE_LIST); 
 			manual->position(0,0,0);
@@ -292,7 +296,7 @@ void Beam::AIstep()
 	
 	
 	//===collisions=====
-	float threatDist = -1;
+	float threatDist = -0.01;
 	Entity *ent;
 	Vector3 v3;
 	bool isCollided = false;
@@ -304,40 +308,49 @@ void Beam::AIstep()
 	float wheelsDist = wheels[1].refnode1->AbsPosition.distance(wheels[0].refnode1->AbsPosition);
 	for( int i=0, sec_num = 0 ; i < rays.size() ; sec_num++ )
 	{
-		Vector3 v1(wheels[1].refnode1->AbsPosition.x + 0.2*cos(headOrient - PI/8*sec_num) + 2*cos(headOrient) + wheelsDist/3*cos(headOrient + PI/2), 
+		Vector3 v1(wheels[1].refnode1->AbsPosition.x + 0.2*cos(headOrient - PI/16*sec_num) + 2*cos(headOrient) + wheelsDist/3*cos(headOrient + PI/2), 
 				   wheels[1].refnode1->AbsPosition.y + 0.5,
-				   wheels[1].refnode1->AbsPosition.z + 0.2*sin(headOrient - PI/8*sec_num) + 2*sin(headOrient) + wheelsDist/3*sin(headOrient + PI/2));
-		Vector3 v2((radius)*cos(headOrient - PI/8*sec_num)+v1.x, v1.y, (radius)*sin(headOrient - PI/8*sec_num)+v1.z);
+				   wheels[1].refnode1->AbsPosition.z + 0.6*sin(headOrient - PI/16*sec_num) + 2*sin(headOrient) + wheelsDist/3*sin(headOrient + PI/2));
+		Vector3 v2((radius)*cos(headOrient - PI/16*sec_num)+v1.x, v1.y, (radius)*sin(headOrient - PI/16*sec_num)+v1.z);
+		Vector3 v3(v1);
 
 		if (!isCollided)
 		{
-			isCollided = mColTools->raycastFromPoint(v2,v1,v3,ent,threatDist);
-			threatDeg = Radian(-PI/8*sec_num).valueDegrees();
+			isCollided = mColTools->raycastFromPoint(v1,v2-v1,v3,ent,threatDist);
+			if (threatDist > 8)
+				isCollided = false;
+			//threatDeg = Radian(PI/16*sec_num + 0.01).valueDegrees();
+			threatDeg = 1;
 		}
 
 		rays[i]->beginUpdate(0);
 		rays[i]->position(v1);
-		rays[i]->position(v2);
+		rays[i]->position(v3);
 		rays[i]->end();		
 
-
 		i++;
-		/*
-		v1 = Vector3(wheels[0].refnode1->AbsPosition.x + 0.2*cos(headOrient + PI/8*sec_num) + 2*cos(headOrient) + wheelsDist/3*cos(headOrient - PI/2),
-					 wheels[0].refnode1->AbsPosition.y + 1,
-					 wheels[0].refnode1->AbsPosition.z + 0.2*sin(headOrient + PI/8*sec_num) + 2*sin(headOrient) + wheelsDist/3*sin(headOrient - PI/2));
-		v2 = Vector3((radius)*cos(headOrient + PI/8*sec_num)+v1.x, v1.y, (radius)*sin(headOrient + PI/8*sec_num)+v1.z);
-		rays[i]->beginUpdate(0);
-		rays[i]->position(v1);
-		rays[i]->position(v2);
-		rays[i]->end();
+		
+		v1 = Vector3(wheels[0].refnode1->AbsPosition.x + 0.2*cos(headOrient + PI/16*sec_num) + 2*cos(headOrient) + wheelsDist/3*cos(headOrient - PI/2),
+					 wheels[0].refnode1->AbsPosition.y + 0.5,
+					 wheels[0].refnode1->AbsPosition.z + 0.6*sin(headOrient + PI/16*sec_num) + 2*sin(headOrient) + wheelsDist/3*sin(headOrient - PI/2));
+		v2 = Vector3((radius)*cos(headOrient + PI/16*sec_num)+v1.x, v1.y, (radius)*sin(headOrient + PI/16*sec_num)+v1.z);
+		v3 = Vector3(v1);
 
 		if (!isCollided)
 		{
-			isCollided = mColTools->raycastFromPoint(v1,v2,v3,ent,threatDist);
-			threatDeg = Radian(PI/8*sec_num).valueDegrees();
+			isCollided = mColTools->raycastFromPoint(v1,v2-v1,v3,ent,threatDist);
+			if (threatDist > 8)
+				isCollided = false;
+			//threatDeg = Radian(-PI/16*sec_num - 0.01).valueDegrees();
+			threatDeg = -1;
 		}
-		i++;			*/	
+
+		rays[i]->beginUpdate(0);
+		rays[i]->position(v1);
+		rays[i]->position(v3);
+		rays[i]->end();
+
+		i++;		
 	}
 	
 	char buff[50];
