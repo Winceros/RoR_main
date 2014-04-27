@@ -5257,6 +5257,7 @@ void RoRFrameListener::loadClassicTerrain(String terrainfile)
 	collisions->finishLoadingTerrain();
 
 //==SENDING-MAP==========================
+	/*
 	FILE *f;
 	f = fopen("C:\\Users\\Ildar_Gilmutdinov\\Documents\\Python projects\\RoR_AI\\map.txt","w+");
 	int step = 5;
@@ -5274,6 +5275,7 @@ void RoRFrameListener::loadClassicTerrain(String terrainfile)
 		fprintf(f,msg.c_str());
 	}
 	fclose(f);
+	*/
 	//=====================================
 
 	//okay, taking a picture of the scene for the envmap

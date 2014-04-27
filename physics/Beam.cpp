@@ -372,7 +372,14 @@ void Beam::AIstep()
 	msg.copy(steer_str,ind2-ind1-1,ind1+1);
 	float steer = atof(steer_str);
 
-	engine->autoSetAcc(acc);
+	if (acc < 0)
+	{
+		this->brake = this->brakeforce;
+	}
+	else
+	{
+		engine->autoSetAcc(acc);
+	}
 	hydrodircommand = steer;
 }
 //===========================================================
